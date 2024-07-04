@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1 class="mt-5">Modifier Diagnostic</h1>
+    <form action="{{ url_for('main.edit_diagnostic', diagnostic_id=diagnostic.id) }}" method="POST">
+        <div class="form-group">
+            <label for="diagnosis">Diagnostic</label>
+            <textarea class="form-control" name="diagnosis" id="diagnosis" rows="3">{{ diagnostic.diagnosis }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Modifier</button>
+    </form>
+</div>
+{% endblock %}

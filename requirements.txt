@@ -1,0 +1,17 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Werkzeug
+flask
+sqlalchemy
+flask-login
+pandas
+numpy
+matplotlib
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-WTF
+email-validator
+firebase-admin
+pyrebase

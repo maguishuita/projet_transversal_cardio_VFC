@@ -1,0 +1,14 @@
+<!-- respond_diagnostic.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Répondre au Diagnostic</title>
+</head>
+<body>
+    <h1>Répondre au Diagnostic</h1>
+    <form action="{{ url_for('main.respond_diagnostic', diagnostic_id=diagnostic.id) }}" method="POST">
+        <textarea name="diagnosis" placeholder="Écrire le diagnostic ici...">{{ diagnostic.diagnosis }}</textarea>
+        <button type="submit">Envoyer</button>
+    </form>
+</body>
+</html>

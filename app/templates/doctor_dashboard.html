@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1 class="mt-5">Dashboard du Médecin</h1>
+
+    <h2 class="mt-4">Diagnostics en attente</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date de la demande</th>
+                <th>Patient</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for diagnostic in pending_diagnostics %}
+                <tr>
+                    <td><span class="date">{{ diagnostic.requested_at }}</span></td>
+                    <td>{{ diagnostic.patient.username }}</td>
+                    <td>
+                        <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#details_pending_{{ loop.index }}" aria-expanded="false" aria-controls="details_pending_{{ loop.index }}">
+                            Détails
+                        </button>
+                    </td>
+                </tr>
+                <tr class="collapse" id="details_pending_{{ loop.index }}">
+                    <td colspan="3">
+                        <div class="card card-body">
+                            <canvas id="ecgChart_pending_{{ loop.index }}" width="400" height="100"></canvas>
+                            <form action="{{ url_for('main.respond_diagnostic', diagnostic_id=diagnostic.id) }}" method="POST">
+                                <div class="form-group">
+                                    <label for="diagnosis">Écrire le diagnostic ici:</label>
+                                    <textarea class="form-control" name="diagnosis" id="diagnosis" rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Envoyer</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2 class="mt-4">Diagnostics traités</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date de la demande</th>
+                <th>Patient</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for diagnostic in treated_diagnostics %}
+                <tr>
+                    <td><span class="date">{{ diagnostic.requested_at }}</span></td>
+                    <td>{{ diagnostic.patient.username }}</td>
+                    <td>
+                        <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#details_treated_{{ loop.index }}" aria-expanded="false" aria-controls="details_treated_{{ loop.index }}">
+                            Détails
+                        </button>
+                    </td>
+                </tr>
+                <tr class="collapse" id="details_treated_{{ loop.index }}">
+                    <td colspan="3">
+                        <div class="card card-body">
+                            <canvas id="ecgChart_treated_{{ loop.index }}" width="400" height="100"></canvas>
+                            <p class="card-text">Diagnostic: {{ diagnostic.diagnosis }}</p>
+                            <p class="card-text">Date de la réponse: <span class="date">{{ diagnostic.responded_at }}</span></p>
+                            <form action="{{ url_for('main.edit_diagnostic', diagnostic_id=diagnostic.id) }}" method="POST">
+                                <div class="form-group">
+                                    <label for="diagnosis">Modifier le diagnostic:</label>
+                                    <textarea class="form-control" name="diagnosis" id="diagnosis" rows="3">{{ diagnostic.diagnosis }}</textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Modifier</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function formatDate() {
+            var dateElements = document.querySelectorAll('.date');
+            dateElements.forEach(function(element) {
+                var date = new Date(element.textContent);
+                element.textContent = date.toLocaleDateString('fr-FR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            });
+        }
+
+        function generateECGChart(ctx, data) {
+            var ecgData = data.length ? data : Array.from({ length: 10 }, () => (Math.random() * 2).toFixed(2));
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({ length: ecgData.length }, (_, i) => i),
+                    datasets: [{
+                        label: 'ECG Data',
+                        data: ecgData,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        formatDate();
+
+        {% for diagnostic in pending_diagnostics %}
+            var ctx_pending_{{ loop.index }} = document.getElementById('ecgChart_pending_{{ loop.index }}').getContext('2d');
+            generateECGChart(ctx_pending_{{ loop.index }}, {{ diagnostic.ecg_data | default('[]') | tojson | safe }});
+        {% endfor %}
+
+        {% for diagnostic in treated_diagnostics %}
+            var ctx_treated_{{ loop.index }} = document.getElementById('ecgChart_treated_{{ loop.index }}').getContext('2d');
+            generateECGChart(ctx_treated_{{ loop.index }}, {{ diagnostic.ecg_data | default('[]') | tojson | safe }});
+        {% endfor %}
+    });
+</script>
+{% endblock %}

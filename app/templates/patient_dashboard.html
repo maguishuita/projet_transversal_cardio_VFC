@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1 class="mt-5">Dashboard du Patient</h1>
+
+    <h2 class="mt-4">Faire une nouvelle demande de diagnostic</h2>
+    <form action="{{ url_for('main.request_diagnostic') }}" method="POST">
+        <div class="form-group">
+            <label for="ecg_data">Données ECG</label>
+            <canvas id="ecgChart" width="400" height="200"></canvas>
+            <input type="hidden" name="ecg_data" id="ecg_data">
+        </div>
+        <div class="form-group">
+            <label for="patient_notes">Notes additionnelles</label>
+            <textarea class="form-control" name="patient_notes" id="patient_notes" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Envoyer la demande</button>
+    </form>
+
+    <h2 class="mt-4">Mes Diagnostics</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date de la demande</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for diagnostic in diagnostics %}
+                <tr>
+                    <td><span class="date">{{ diagnostic.requested_at }}</span></td>
+                    <td>
+                        {% if diagnostic.diagnosis %}
+                            Diagnostiqué
+                        {% else %}
+                            En attente
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#details_{{ loop.index }}" aria-expanded="false" aria-controls="details_{{ loop.index }}">
+                            Détails
+                        </button>
+                    </td>
+                </tr>
+                <tr class="collapse" id="details_{{ loop.index }}">
+                    <td colspan="3">
+                        <div class="card card-body">
+                            <canvas id="ecgChart_{{ loop.index }}" width="400" height="100"></canvas>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    var ctx_{{ loop.index }} = document.getElementById('ecgChart_{{ loop.index }}').getContext('2d');
+                                    var ecgData_{{ loop.index }} = {{ diagnostic.ecg_data | tojson | safe }};
+                                    if (!ecgData_{{ loop.index }} || ecgData_{{ loop.index }}.length === 0) {
+                                        ecgData_{{ loop.index }} = Array.from({length: 10}, () => (Math.random() * 2).toFixed(2));
+                                    }
+                                    var ecgChart_{{ loop.index }} = new Chart(ctx_{{ loop.index }}, {
+                                        type: 'line',
+                                        data: {
+                                            labels: Array.from({length: ecgData_{{ loop.index }}.length}, (_, i) => i),
+                                            datasets: [{
+                                                label: 'ECG Data',
+                                                data: ecgData_{{ loop.index }},
+                                                borderColor: 'rgba(75, 192, 192, 1)',
+                                                borderWidth: 1,
+                                                fill: false
+                                            }]
+                                        },
+                                        options: {
+                                            scales: {
+                                                x: {
+                                                    type: 'linear',
+                                                    position: 'bottom'
+                                                }
+                                            }
+                                        }
+                                    });
+                                });
+                            </script>
+                            <p class="card-text">Notes du patient: {{ diagnostic.patient_notes }}</p>
+                            {% if diagnostic.diagnosis %}
+                                <p class="card-text">Diagnostic: {{ diagnostic.diagnosis }}</p>
+                                <p class="card-text">Date de la réponse: <span class="date">{{ diagnostic.responded_at }}</span></p>
+                            {% else %}
+                                <p class="card-text">Diagnostic en attente</p>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    var ctx = document.getElementById('ecgChart').getContext('2d');
+    var ecgData = Array.from({length: 10}, () => (Math.random() * 2).toFixed(2));  // Génère des valeurs ECG aléatoires positives
+    var ecgChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Array.from({length: ecgData.length}, (_, i) => i),
+            datasets: [{
+                label: 'ECG Data',
+                data: ecgData,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+                fill: false
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    document.getElementById('ecg_data').value = JSON.stringify(ecgData);
+
+    // Formatage des dates
+    document.addEventListener('DOMContentLoaded', function() {
+        var dateElements = document.querySelectorAll('.date');
+        dateElements.forEach(function(element) {
+            var date = new Date(element.textContent);
+            element.textContent = date.toLocaleDateString('fr-FR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        });
+    });
+</script>
+{% endblock %}

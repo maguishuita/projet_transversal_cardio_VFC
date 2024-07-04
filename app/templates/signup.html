@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>S'inscrire</title>
+</head>
+<body>
+    <h1>Inscription</h1>
+    <form method="POST">
+        <label for="username">Nom d'utilisateur:</label>
+        <input type="text" id="username" name="username" required>
+        <label for="password">Mot de passe:</label>
+        <input type="password" id="password" name="password" required>
+        <label for="role">Rôle:</label>
+        <select id="role" name="role">
+            <option value="doctor">Médecin</option>
+            <option value="patient">Patient</option>
+        </select>
+        <button type="submit">S'inscrire</button>
+    </form>
+</body>
+</html>
